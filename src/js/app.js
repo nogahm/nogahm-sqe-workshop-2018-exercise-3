@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import {createParseInfo, parseCode, parseInfo} from './code-analyzer';
 import {functionAfterSubs,newLines,colors} from './symbolicSubstitution';
-
+import {createCFG} from './CFG';
 
 
 $(document).ready(function () {
@@ -13,8 +13,9 @@ $(document).ready(function () {
         let input=$('#varsPlaceholder').val();
         createParseInfo(parsedCode);
         functionAfterSubs(codeToParse,input);
-        showFuncAfterSubs();
+        //showFuncAfterSubs();
         // addToTable();
+        createCFG(codeToParse,input);
     });
 
 });
