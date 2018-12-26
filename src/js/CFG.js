@@ -70,7 +70,7 @@ function addNumbers() {
             end=true;
         else {
             let newLine=CFG[i];
-            let newLabel='(('+(i+1)+'))\n'+getAttribute('label',CFG[i]);
+            let newLabel='('+(i+1)+')\n'+getAttribute('label',CFG[i]);
             newLine=newLine.substring(0,newLine.indexOf('label=')+7)+newLabel+'"'+newLine.substring(newLine.indexOf(','));
             CFG[i]=newLine;
         }
