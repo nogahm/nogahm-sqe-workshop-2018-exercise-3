@@ -9,7 +9,7 @@ const parseCode = (codeToParse) => {
     parseInfo=[];
     line=1;
     functionCodeOnly=saveGlobals(codeToParse);
-    let ans=esprima.parseScript(functionCodeOnly);
+    let ans=esprima.parseScript(functionCodeOnly,{ range: true });
     initiateMap();
 
     return ans;

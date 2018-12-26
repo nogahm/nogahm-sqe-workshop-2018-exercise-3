@@ -22,7 +22,6 @@ function functionAfterSubs(codeToParse,input) {
     let temp=functionCodeOnly.replace(new RegExp('}', 'g'),'}\n');
     oldLines=temp.split('\n');
     substitute(new Map());
-    // alert('aaaaaaaa');
 }
 
 function initiate() {
@@ -58,7 +57,7 @@ function initiateMap() {
     mathOperatorsMap['*']=multi;
     mathOperatorsMap['/']=divide;
 }
-export {functionAfterSubs,colors};
+export {functionAfterSubs,colors,oldLines};
 export {newLines};
 
 function checkIfOnlyOneInArray(var1) {
