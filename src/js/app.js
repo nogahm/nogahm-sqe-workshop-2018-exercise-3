@@ -1,7 +1,8 @@
 import $ from 'jquery';
-import {createParseInfo, parseCode, parseInfo} from './code-analyzer';
-import {functionAfterSubs, newLines, colors, oldLines} from './symbolicSubstitution';
-import {createCFG} from './CFG';
+import {createParseInfo, parseCode} from './code-analyzer';
+import {functionAfterSubs} from './symbolicSubstitution';
+import {createCFG} from './CFGCreator';
+import * as viz from 'viz.js';
 
 
 $(document).ready(function () {
@@ -16,7 +17,8 @@ $(document).ready(function () {
         functionAfterSubs(codeToParse,input);
         //showFuncAfterSubs();
         // addToTable();
-        let graphHtml = createCFG(parsedCode, parseInfo, codeToParse);
+        let str = createCFG(parsedCode, codeToParse);
+        let graphHtml=viz('digraph{'+str+'}');
         showGraph(graphHtml);
     });
 

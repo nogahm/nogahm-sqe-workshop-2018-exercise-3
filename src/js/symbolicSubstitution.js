@@ -309,7 +309,7 @@ function condition(currItem,localVars) {
     let oldLine=oldLines[oldLinesCounter];
     // let newLine=oldLine.replace(/ *\([^)]*\) */, '('+newCondition+')');
     let newLine=oldLine.substring(0,oldLine.indexOf('(')+1)+newCondition+oldLine.substring(oldLine.lastIndexOf(')'),oldLine.length);
-    if(currItem.Type=='if statement' || currItem.Type=='else if statement'){
+    if(currItem.Type=='if statement' || currItem.Type=='else if statement' || currItem.Type=='While Statement'){
         findColor(localVars,newCondition);
     }
     return newLine;
@@ -340,7 +340,7 @@ function BinaryExpression(expression,localVars)
     right=binaryOneSide(right,localVars);
     //calculate if possible
     let res=calculate(left,right,expression.operator);
-    if(res==null) {
+    if(res==null || isNaN(res)) {
         if (expression.operator == '*' || expression.operator == '/')
             return '(' + left + ') ' + expression.operator + ' ' + right;
         else
@@ -483,7 +483,7 @@ function findColor(localVars,condition) {
     let x = esprima.parseScript(condition+'');
     let func = typeToHandlerMappingColor[(x.body)[0].expression.type];//what king of expression
     let ans= func.call(undefined,localVars, (x.body)[0].expression);
-    colors.set(newLineCounter,ans);
+    colors.set(oldLines[oldLinesCounter].substring(oldLines[oldLinesCounter].indexOf('(')+1, oldLines[oldLinesCounter].lastIndexOf(')')),ans);
 }
 
 function initiateMapColor() {

@@ -2,22 +2,25 @@
 import assert from 'assert';
 import {parseCode, parseInfo, createParseInfo} from '../src/js/code-analyzer';
 import {functionAfterSubs,newLines} from '../src/js/symbolicSubstitution';
+import {CFG, createCFG} from '../src/js/CFGCreator';
+import $ from "jquery";
+import * as viz from 'viz.js';
 
-describe('The javascript parser', () => {
-    it('is parsing an empty function correctly', () => {
-        assert.equal(
-            JSON.stringify(parseCode('')),
-            '{"type":"Program","body":[],"sourceType":"script"}'
-        );
-    });
-
-    // it('is parsing a simple variable declaration correctly', () => {
-    //     assert.equal(
-    //         JSON.stringify(parseCode('let a = 1;')),
-    //         '{"type":"Program","body":[{"type":"VariableDeclaration","declarations":[{"type":"VariableDeclarator","id":{"type":"Identifier","name":"a"},"init":{"type":"Literal","value":1,"raw":"1"}}],"kind":"let"}],"sourceType":"script"}'
-    //     );
-    // });
-});
+// describe('The javascript parser', () => {
+//     it('is parsing an empty function correctly', () => {
+//         assert.equal(
+//             JSON.stringify(parseCode('')),
+//             '{"type":"Program","body":[],"sourceType":"script"}'
+//         );
+//     });
+//
+//     // it('is parsing a simple variable declaration correctly', () => {
+//     //     assert.equal(
+//     //         JSON.stringify(parseCode('let a = 1;')),
+//     //         '{"type":"Program","body":[{"type":"VariableDeclaration","declarations":[{"type":"VariableDeclarator","id":{"type":"Identifier","name":"a"},"init":{"type":"Literal","value":1,"raw":"1"}}],"kind":"let"}],"sourceType":"script"}'
+//     //     );
+//     // });
+// });
 
 describe('save info and create table',()=>{
 
@@ -27,15 +30,15 @@ describe('save info and create table',()=>{
         assert.deepEqual('Illigal input',msg);
     });
 
-    it('return inside function', ()=>{
-        let text=parseCode('function x() {\n' +
-            '    return 0;\n' +
-            '}');
-        createParseInfo(text);
-        let expRes=[{Line:'1', Type:'function declaration', Name:'x', Condition:'', Value:''},
-            {Line:'2', Type:'return statement', Name:'', Condition:'', Value:'0'}];
-        assert.deepEqual(expRes,parseInfo);
-    });
+    // it('return inside function', ()=>{
+    //     let text=parseCode('function x() {\n' +
+    //         '    return 0;\n' +
+    //         '}');
+    //     createParseInfo(text);
+    //     let expRes=[{Line:'1', Type:'function declaration', Name:'x', Condition:'', Value:''},
+    //         {Line:'2', Type:'return statement', Name:'', Condition:'', Value:'0'}];
+    //     assert.deepEqual(expRes,parseInfo);
+    // });
 
     it('function with var assign', ()=>{
         let code='function x(a){\nlet b=a;\n}\nlet y=0;';
@@ -470,6 +473,142 @@ describe('save info and create table',()=>{
             'if(x == 0)\n' +
             'return x;\n' +
             '}\n');
+    });
+
+    it('check graph', ()=> {
+        let codeToParse = 'function foo(x){\n' +
+            'x++;\n' +
+            'if(x>0)\n' +
+            'return x;\n' +
+            '}';
+        let input = '0';
+        let parsedCode = parseCode(codeToParse);
+        createParseInfo(parsedCode);
+        functionAfterSubs(codeToParse,input);
+        let ans = createCFG(parsedCode, codeToParse);
+
+        let wantedAns='n1 [label="(1)\n'+'x++", shape="box", style="filled", fillcolor="green"]\n'+
+            'n2 [label="(2)\n'+'x>0", shape="diamond", style="filled", fillcolor="green"]\n'+
+            'n3 [label="(3)\n'+'return x;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n1 -> n2 []\n'+
+            'n2 -> n3 [label="true"]'+ '\n\n';
+        assert.deepEqual(ans, wantedAns);
+    });
+
+    it('check graph only return', ()=> {
+        let codeToParse = 'function foo(){\n' +
+            'return 0;\n' +
+            '}';
+        let input = '';
+        let parsedCode = parseCode(codeToParse);
+        createParseInfo(parsedCode);
+        functionAfterSubs(codeToParse,input);
+        let ans = createCFG(parsedCode, codeToParse);
+
+        let wantedAns='n1 [label="(1)\n'+'return 0;", shape="box", style="filled", fillcolor="green"]\n'+
+           '\n';
+        assert.deepEqual(ans, wantedAns);
+    });
+
+    it('check graph merge', ()=> {
+        let codeToParse = 'function foo(z){\n' +
+            'let x=0;\n'+
+            'z=1;\n'+
+            'let y=0;\n'+
+            'return 0;\n' +
+            '}';
+        let input = '0';
+        let parsedCode = parseCode(codeToParse);
+        createParseInfo(parsedCode);
+        functionAfterSubs(codeToParse,input);
+        let ans = createCFG(parsedCode, codeToParse);
+
+        let wantedAns='n1 [label="(1)\n'+'x=0;\nz=1\ny=0;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n4 [label="(2)\n'+'return 0;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n1 -> n4 []\n'+
+            '\n';
+        assert.deepEqual(ans, wantedAns);
+    });
+
+    it('check graph if else', ()=> {
+        let codeToParse = 'function foo(){\n' +
+            'if(1==1){\n'+
+            'let y=1;}\n'+
+            'else{\n'+
+            'let y=0;}\n'+
+            'return y;\n' +
+            '}';
+        let input = '';
+        let parsedCode = parseCode(codeToParse);
+        createParseInfo(parsedCode);
+        functionAfterSubs(codeToParse,input);
+        let ans = createCFG(parsedCode, codeToParse);
+
+        let wantedAns='n1 [label="(1)\n'+'1==1", shape="diamond", style="filled", fillcolor="green"]\n'+
+            'n2 [label="(2)\n'+'y=1;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n3 [label="(3)\n'+'return y;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n4 [label="(4)\n'+'y=0;", shape="box"]\n'+
+            'n1 -> n2 [label="true"]\n'+
+            'n1 -> n4 [label="false"]\n'+
+            'n2 -> n3 []\n'+
+            'n4 -> n3 []\n'+
+            '\n';
+        assert.deepEqual(ans, wantedAns);
+    });
+
+    it('check graph if else-false', ()=> {
+        let codeToParse = 'function foo(){\n' +
+            'if(1==0){\n'+
+            'let y=1;}\n'+
+            'else{\n'+
+            'let y=0;}\n'+
+            'return y;\n' +
+            '}';
+        let input = '';
+        let parsedCode = parseCode(codeToParse);
+        createParseInfo(parsedCode);
+        functionAfterSubs(codeToParse,input);
+        let ans = createCFG(parsedCode, codeToParse);
+
+        let wantedAns='n1 [label="(1)\n'+'1==0", shape="diamond", style="filled", fillcolor="green"]\n'+
+            'n2 [label="(2)\n'+'y=1;", shape="box"]\n'+
+            'n3 [label="(3)\n'+'return y;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n4 [label="(4)\n'+'y=0;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n1 -> n2 [label="true"]\n'+
+            'n1 -> n4 [label="false"]\n'+
+            'n2 -> n3 []\n'+
+            'n4 -> n3 []\n'+
+            '\n';
+        assert.deepEqual(ans, wantedAns);
+    });
+
+    it('check graph two if -one true other false', ()=> {
+        let codeToParse = 'function foo(){\n' +
+            'if(1==0){\n'+
+            'let y=1;}\n'+
+            'if(1==1){\n'+
+            'let y=0;}\n'+
+            'return y;\n' +
+            '}';
+        let input = '';
+        let parsedCode = parseCode(codeToParse);
+        createParseInfo(parsedCode);
+        functionAfterSubs(codeToParse,input);
+        let ans = createCFG(parsedCode, codeToParse);
+
+        let wantedAns='n1 [label="(1)\n'+'1==0", shape="diamond", style="filled", fillcolor="green"]\n'+
+            'n2 [label="(2)\n'+'y=1;", shape="box"]\n'+
+            'n3 [label="(3)\n'+'1==1", shape="diamond", style="filled", fillcolor="green"]\n'+
+            'n4 [label="(4)\n'+'y=0;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n5 [label="(5)\n'+'return y;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n1 -> n2 [label="true"]\n'+
+            'n1 -> n3 [label="false"]\n'+
+            'n2 -> n3 []\n'+
+            'n3 -> n4 [label="true"]\n'+
+            'n3 -> n5 [label="false"]\n'+
+            'n4 -> n5 []\n'+
+            '\n';
+        assert.deepEqual(ans, wantedAns);
     });
 });
 
