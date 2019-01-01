@@ -161,7 +161,7 @@ function mergeNodes() {
     CFG[graphIndex-1]=newLine;
     CFG.splice(graphIndex, 1);
     let name1=node1.substring(0,node1.indexOf('['));
-    let name2=node2.substring(0,node1.indexOf('['));
+    let name2=node2.substring(0,node2.indexOf('['));
     handlePointers(name1,name2);
 }
 
@@ -183,11 +183,14 @@ function getLineType(line){
 function existLink(index1, index2) {
     let name1=CFG[index1].substring(0,CFG[index1].indexOf(' '));
     let name2=CFG[index2].substring(0,CFG[index2].indexOf(' '));
+    let ans=false;
     for(let i=0;i<CFG.length;i++){
-        if(CFG[i].includes(name1+' -> '+name2) || CFG[i].includes(name2+' -> '+name1))
-            return true;
+        if(CFG[i].includes(name1+' -> '+name2))
+            ans= true;
+        else if(CFG[i].includes(' -> '+name2))
+            return false;
     }
-    return false;
+    return ans;
 }
 
 function isRegularLine(graphIndex){
