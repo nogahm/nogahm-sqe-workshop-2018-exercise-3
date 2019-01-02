@@ -610,6 +610,55 @@ describe('save info and create table',()=>{
             '\n';
         assert.deepEqual(ans, wantedAns);
     });
+
+    it('check graph arr', ()=> {
+        let codeToParse = 'function foo(z){\n' +
+            'let x=0;\n'+
+            'z[0]=x;\n'+
+            'let y=0;\n'+
+            'return 0;\n' +
+            '}';
+        let input = '[1,2,3]';
+        let parsedCode = parseCode(codeToParse);
+        createParseInfo(parsedCode);
+        functionAfterSubs(codeToParse,input);
+        let ans = createCFG(parsedCode, codeToParse);
+
+        let wantedAns='n1 [label="(1)\n'+'x=0;\nz[0]=x\ny=0;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n4 [label="(2)\n'+'return 0;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n1 -> n4 []\n'+
+            '\n';
+        assert.deepEqual(ans, wantedAns);
+    });
+
+    it('check graph else if', ()=> {
+        let codeToParse = 'function foo(){\n' +
+            'if(1==0){\n'+
+            'let y=1;}\n'+
+            'else if(0==0){\n'+
+            'let y=0;}\n'+
+            'return y;\n' +
+            '}';
+        let input = '';
+        let parsedCode = parseCode(codeToParse);
+        createParseInfo(parsedCode);
+        functionAfterSubs(codeToParse,input);
+        let ans = createCFG(parsedCode, codeToParse);
+
+        let wantedAns='n1 [label="(1)\n'+'1==0", shape="diamond", style="filled", fillcolor="green"]\n'+
+            'n2 [label="(2)\n'+'y=1;", shape="box"]\n'+
+            'n3 [label="(3)\n'+'return y;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n4 [label="(4)\n'+'0==0", shape="diamond", style="filled", fillcolor="green"]\n'+
+            'n5 [label="(5)\n'+'y=0;", shape="box", style="filled", fillcolor="green"]\n'+
+            'n1 -> n2 [label="true"]\n'+
+            'n1 -> n4 [label="false"]\n'+
+            'n2 -> n3 []\n'+
+            'n4 -> n5 [label="true"]\n'+
+            'n4 -> n3 [label="false"]\n'+
+            'n5 -> n3 []\n'+
+            '\n';
+        assert.deepEqual(ans, wantedAns);
+    });
 });
 
 
